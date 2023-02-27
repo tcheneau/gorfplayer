@@ -1,0 +1,36 @@
+name: Go release
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [ 'amd64', 'arm64' ]
+        os: [ 'linux' ]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - name: Install dependencies
+        run: |
+          go get .
+          go get github.com/tarm/serial
+
+      - name: Build
+        run: env GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -v cmd/gorfplayer/gorfplayer.go -o rfplayer.${{ matrix.os }}-${{ matrix.arch }}
+
+      - name: Upload Go test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: env GOOS=${{matrix.os}} GOARCH=${{matrix.arch}}
+          path: rfplayer.${{ matrix.os }}-${{ matrix.arch }}
+
+# no test for now
+#      - name: Test
+#run: go test -v ./...
