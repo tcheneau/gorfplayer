@@ -20,7 +20,6 @@ jobs:
       - name: Install dependencies
         run: |
           go get .
-          go get github.com/tarm/serial
 
       - name: Build
         run: env GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -v cmd/gorfplayer/gorfplayer.go -o rfplayer.${{ matrix.os }}-${{ matrix.arch }}
