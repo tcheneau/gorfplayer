@@ -1,0 +1,64 @@
+kind: pipeline
+type: docker
+name: default
+
+# required for arm64 runners
+platform:
+  os: linux
+  arch: arm64
+
+steps:
+#- name: test
+#  image: golang
+#  volumes:
+#  - name: deps
+#    path: /go
+#  commands:
+#  - go test
+
+- name: build
+  image: golang
+  volumes:
+  - name: deps
+    path: /go
+  commands:
+  - mkdir output
+  - go build -o output/gorfplayer cmd/gorfplayer/gorfplayer.go
+
+#- name: gitea_release
+#  image: plugins/gitea-release
+#  settings:
+#    api_key:
+#      from_secret: gitea_token
+#    base_url: http://192.168.1.35:3000
+#    insecure: true
+#    files: 
+#      - sysinfoc
+#      - sysinfod
+#      - netc
+#      - timec
+#    checksum:
+#      - sha256
+#      - sha512
+#    title: release
+#    when:
+#      event: tag
+
+- name: upload
+  image: plugins/s3
+  settings:
+    bucket: drone
+    access_key:
+      from_secret: aws_access_key_id
+    secret_key:
+      from_secret: aws_secret_access_key
+#    acl: user-policy
+    source: output/*
+    target: /gorfplayer/arm64
+    path_style: true
+    strip_prefix: output/
+    endpoint: http://192.168.1.35:9000
+
+volumes:
+- name: deps
+  temp: {}
