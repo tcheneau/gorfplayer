@@ -170,14 +170,18 @@ func (h *serialHandler) drain() {
 func main() {
 	// Command line flag to enable or disable TLS
 	var tlsEnabled bool
-	var portPath string
+	var sportPath string
+	var laddr string
+	var lport string
 	flag.BoolVar(&tlsEnabled, "tls", false, "enable TLS connections")
-	flag.StringVar(&portPath, "port", "/dev/ttyUSB0", "path to the serial port")
+	flag.StringVar(&sportPath, "serialport", "/dev/ttyUSB0", "path to the serial port")
+	flag.StringVar(&laddr, "address", "", "listen adress (default all interfaces)")
+	flag.StringVar(&lport, "port", "8000", "listen port")
 	flag.Parse()
 
 	// Setup serial port
 	// baudrate 115200, 8bit data, no parity, 	1 stop bit
-	c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200, ReadTimeout: time.Second * 1}
+	c := &serial.Config{Name: sportPath, Baud: 115200, ReadTimeout: time.Second * 1}
 	s, err := serial.OpenPort(c)
 
 	if err != nil {
@@ -202,7 +206,7 @@ func main() {
 	// Setup server
 	srv := &http.Server{
 		Handler: r,
-		Addr:    "127.0.0.1:8000",
+		Addr:    laddr + ":" + lport,
 		// Enable TLS if specified
 		TLSConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12,
@@ -226,31 +230,5 @@ func main() {
 	} else {
 		log.Printf("Starting server without TLS on port %d\n", 8000)
 		log.Fatal(srv.ListenAndServe())
-	}
-}
-
-func endpoint1Handler(w http.ResponseWriter, r *http.Request) {
-	// Stub
-}
-
-func endpoint2Handler(w http.ResponseWriter, r *http.Request) {
-	// Stub
-
-	// Common code for all requests can go here...
-
-	switch r.Method {
-	case http.MethodGet:
-		// Handle the GET request...
-
-	case http.MethodPost:
-		// Handle the POST request...
-
-	case http.MethodOptions:
-		w.Header().Set("Allow", "GET, POST, OPTIONS")
-		w.WriteHeader(http.StatusNoContent)
-
-	default:
-		w.Header().Set("Allow", "GET, POST, OPTIONS")
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
